@@ -10,6 +10,10 @@ public class Crime {
     private Date mDate;
     private boolean mSolved;
 
+    public UUID getId() {
+        return mId;
+    }
+
     public String getTitle() {
         return mTitle;
     }
