@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.UUID;
 
 import database.CrimeBaseHelper;
+import database.CrimeCursorWrapper;
 import database.CrimeDbSchema.CrimeTable;
 
 public class CrimeLab {
     private static CrimeLab sCrimeLab;
+
+//    private List<Crime> mCrimes;
 
     private Context mContext;
     private SQLiteDatabase mDatabase;
@@ -31,16 +34,52 @@ public class CrimeLab {
         mDatabase = new CrimeBaseHelper(mContext)
                 .getWritableDatabase();
 
-
+//        mCrimes = new ArrayList<>();
+//
+//        for (int i = 0; i < 100; i++) {
+//            Crime crime = new Crime();
+//            crime.setTitle("Crime #" + i);
+//            crime.setSolved(i % 2 == 0); // Для каждого второго объекта
+//            mCrimes.add(crime);
+//        }
     }
 
     public List<Crime> getCrimes() {
+        List<Crime> crimes = new ArrayList<>();
+
+        CrimeCursorWrapper cursor = queryCrimes(null, null);
+
+        try {
+            cursor.moveToFirst();
+
+            while (!cursor.isAfterLast()) {
+                crimes.add(cursor.getCrime());
+                cursor.moveToNext();
+            }
+
+        } finally {
+            cursor.close();
+        }
+
         return new ArrayList<>();
     }
 
     public Crime getCrime(UUID id) {
+        CrimeCursorWrapper cursor = queryCrimes(
+                CrimeTable.Cols.UUID + " = ?",
+                new String[] { id.toString() }
+        );
 
-        return null;
+        try {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+
+            cursor.moveToFirst();
+            return cursor.getCrime();
+        } finally {
+            cursor.close();
+        }
     }
 
     public void addCrime(Crime c) {
@@ -69,7 +108,7 @@ public class CrimeLab {
                 new String[] { uuidString } );
     }
 
-    private Cursor queryCrimes(String whereClause, String[] whereArgs) {
+    private CrimeCursorWrapper queryCrimes(String whereClause, String[] whereArgs) {
         Cursor cursor = mDatabase.query(
                 CrimeTable.NAME,
                 null, // colums = null - выбираются все столбцы
@@ -80,6 +119,6 @@ public class CrimeLab {
                 null
         );
 
-        return cursor;
+        return new CrimeCursorWrapper(cursor);
     }
 }
