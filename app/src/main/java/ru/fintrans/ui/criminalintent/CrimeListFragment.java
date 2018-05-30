@@ -1,6 +1,6 @@
 package ru.fintrans.ui.criminalintent;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,6 +26,23 @@ public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
     private boolean mSubtitleVisible;
+    private Callbacks mCallbaks;
+
+    public interface Callbacks {
+        void onCrimeSelected(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbaks = (Callbacks) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbaks = null;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,10 +104,13 @@ public class CrimeListFragment extends Fragment {
                 Crime crime = new Crime();
                 CrimeLab.get(getActivity()).addCrime(crime);
 
-                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
+//                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
 //                Intent intent = CrimeFragment. newInstance(crime.getId());
 
-                startActivity(intent);
+//                startActivity(intent);
+                updateUI();
+                mCallbaks.onCrimeSelected(crime);
+
                 return true;
 
             case R.id.show_subtitle:
@@ -117,7 +137,7 @@ public class CrimeListFragment extends Fragment {
         activity.getSupportActionBar().setSubtitle(subtitle);
     }
 
-    private void updateUI() {
+    public void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
@@ -161,9 +181,11 @@ public class CrimeListFragment extends Fragment {
         public void onClick(View v) {
 //            Toast.makeText(getActivity(), mCrime.getTitle() + " clicked!", Toast.LENGTH_SHORT).show();
 //            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
-            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+//            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+//
+//            startActivity(intent);
 
-            startActivity(intent);
+            mCallbaks.onCrimeSelected(mCrime);
         }
     }
 
